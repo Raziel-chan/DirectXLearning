@@ -25,6 +25,9 @@
     <Filter Include="shaders">
       <UniqueIdentifier>{218259c4-f289-4ce5-8794-dd37aa42acf5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="docs">
+      <UniqueIdentifier>{3fc1a1fc-468f-450e-98e9-6ccdc7f48d1e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -69,5 +72,10 @@
     <Image Include="DirectXLearning.ico">
       <Filter>Fichiers de ressources</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="progress.md">
+      <Filter>docs</Filter>
+    </None>
   </ItemGroup>
 </Project>
