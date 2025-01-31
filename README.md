@@ -54,7 +54,7 @@ DirectXLearning/
    - Ray tracing concepts
 
 ## Development Notes
-- Started: [Current Date]
+- Started: Dec 12, 2024
 - Project focuses on learning graphics programming fundamentals
 - Building foundation for potential career in graphics programming or game development
 
