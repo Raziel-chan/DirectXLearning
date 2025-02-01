@@ -28,10 +28,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         // Use our Window class's ProcessMessages method
         running = window.ProcessMessages();
 
+		// Render the frame
+		window.Render();
+
+
         // Add a small sleep to prevent high CPU usage
         Sleep(1);  // Sleep for 1ms
 
-        // Later: DirectX rendering will go here
     }
 
     OutputDebugString(L"Exiting program\n");

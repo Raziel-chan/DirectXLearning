@@ -17,6 +17,11 @@ GraphicsEngine::~GraphicsEngine()
 // Initialize the Directx for our window
 bool GraphicsEngine::Initialize(HWND hwnd, int windowWidth, int windowHeight)
 {
+	UINT createDeviceFlags = 0;
+	#ifdef _DEBUG
+		createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+	#endif
+
 	// First, we will set up the swap chain
 	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
 	swapChainDesc.BufferDesc.Width = windowWidth;
@@ -25,14 +30,18 @@ bool GraphicsEngine::Initialize(HWND hwnd, int windowWidth, int windowHeight)
 	swapChainDesc.BufferDesc.RefreshRate.Numerator = 60; // 60 Hz refresh rate
 	swapChainDesc.BufferDesc.RefreshRate.Denominator = 1; // 60 Hz refresh rate
 	swapChainDesc.SampleDesc.Count = 1; // No anti-aliasing
+	swapChainDesc.SampleDesc.Quality = 0; // No anti-aliasing
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.BufferCount = 2; // Double buffering
 	swapChainDesc.OutputWindow = hwnd;
 	swapChainDesc.Windowed = TRUE;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
+	// Log that we're starting device creation
+	OutputDebugString(L"Creating Device and SwapChain...\n");
+
 	// Create the device, device context and swap chain
-	UINT createDeviceFlags = D3D11_CREATE_DEVICE_DEBUG; // enable debugging
+	//UINT createDeviceFlags = D3D11_CREATE_DEVICE_DEBUG; // enable debugging
 	
 	// Try to create the device and swap chain
 	HRESULT result = D3D11CreateDeviceAndSwapChain(
@@ -56,11 +65,17 @@ bool GraphicsEngine::Initialize(HWND hwnd, int windowWidth, int windowHeight)
 		MessageBox(hwnd, L"Failed to create device and swap chain!", L"Error", MB_OK);
 		return false;
 	}
+
+	OutputDebugString(L"Device and SwapChain created successfully\n");
+
 	// Create the render target
 	if (!CreateRenderTarget())
 	{
+		OutputDebugString(L"Failed to create render target\n");
 		return false;
 	}
+
+	OutputDebugString(L"Render target created successfully\n");
 
 	// set up the viewport
 	D3D11_VIEWPORT viewport = {}; // create a viewport
@@ -68,7 +83,15 @@ bool GraphicsEngine::Initialize(HWND hwnd, int windowWidth, int windowHeight)
 	viewport.Height = static_cast<float>(windowHeight);	// height of the viewport
 	viewport.MinDepth = 0.0f; // the closest an object can be on the screen
 	viewport.MaxDepth = 1.0f; // the farthest an object can be on the screen
-	m_context->RSSetViewports(1, &viewport); // set the viewport
+
+	if (m_context) {
+		m_context->RSSetViewports(1, &viewport); // set the viewport
+		OutputDebugString(L"Viewport set successfully\n");
+	}
+	else {
+		OutputDebugString(L"Failed to set viewport\n");
+		return false;
+	}
 
 	return true;
 }
@@ -81,6 +104,20 @@ bool GraphicsEngine::CreateRenderTarget()
 	// Check if we got the back buffer
 	if (FAILED(result))
 	{
+		OutputDebugString(L"Failed to get back buffer\n");
+		return false;
+	}
+
+	// Create the render target view from the back buffer
+	result = m_device->CreateRenderTargetView(
+		backBuffer.Get(),  // The texture to create the view from
+		nullptr,          // Use default view settings
+		m_renderTarget.GetAddressOf()  // Store the created view
+	);
+
+	if (FAILED(result))
+	{
+		OutputDebugString(L"Failed to create render target view\n");
 		return false;
 	}
 
@@ -92,8 +129,14 @@ bool GraphicsEngine::CreateRenderTarget()
 
 void GraphicsEngine::BeginFrame()
 {
+	if (!m_renderTarget)
+	{
+		OutputDebugString(L"Render target is null in BeginFrame\n");
+		return;
+	}
+
 	// Clear the screen to a dark blue color
-	float clearColor[] = { 0.0f, 0.1f, 0.2f, 1.0f }; // dark blue
+	float clearColor[4] = { 0.0f, 0.1f, 0.2f, 1.0f }; // dark blue
 	m_context->ClearRenderTargetView(m_renderTarget.Get(), clearColor); // clear the render target
 }
 

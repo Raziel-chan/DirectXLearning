@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <string>
 #include "Window.h"
+#include "GraphicsEngine.h"
 
 
 Window::Window(const std::wstring& title, int width,int height)
@@ -78,6 +79,13 @@ bool Window::Initialize() {
 	ShowWindow(m_handle, SW_SHOW);
 	UpdateWindow(m_handle);
 
+	// Create the graphics engine
+	m_graphicsEngine = std::make_unique<GraphicsEngine>();
+	if (!m_graphicsEngine->Initialize(m_handle, m_width, m_height))
+	{
+		return false;
+	}
+
 	return true;
 }
 
@@ -130,6 +138,13 @@ bool Window::Initialize() {
 		}
 
 		return DefWindowProc(hwnd, message, wParam, lParam);
+	}
+
+	void Window::Render()
+	{
+		m_graphicsEngine->BeginFrame();
+		//drawing commands will go here
+		m_graphicsEngine->EndFrame();
 	}
 
 	LRESULT Window::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam) {

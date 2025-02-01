@@ -1,6 +1,8 @@
 #pragma once
 #include <windows.h>
 #include <string>
+#include <memory>
+#include "GraphicsEngine.h"
 
 class Window {
 public:
@@ -8,8 +10,10 @@ public:
     ~Window();
     bool ProcessMessages();
     bool Initialize();
+    void Render();
 
 private:
+	std::unique_ptr<GraphicsEngine> m_graphicsEngine;
     // Message handlers
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
     LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam);
