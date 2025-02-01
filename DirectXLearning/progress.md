@@ -32,12 +32,12 @@ DirectXLearning/
 - [x] Initialized Git repository
 - [x] Created documentation structure
 
-### Phase 2: Windows Programming Fundamentals (Next Steps)
-- [ ] Create basic Windows window
-- [ ] Implement window message handling
-- [ ] Set up main application loop
+### Phase 2: Windows Programming Fundamentals
+- [x] Create basic Windows window
+- [x] Implement window message handling
+- [x] Set up main application loop
 
-### Phase 3: DirectX Initialization (Planned)
+### Phase 3: DirectX Initialization (Next Steps)
 - [ ] DirectX device setup
 - [ ] Swap chain creation
 - [ ] Basic rendering pipeline
@@ -54,7 +54,7 @@ DirectXLearning/
    - Ray tracing concepts
 
 ## Development Notes
-- Started: [Current Date]
+- Started: Dec 12, 2024
 - Project focuses on learning graphics programming fundamentals
 - Building foundation for potential career in graphics programming or game development
 

@@ -1,0 +1,104 @@
+#include "GraphicsEngine.h"
+#include <sstream> // for error messages
+
+// Constructor
+GraphicsEngine::GraphicsEngine()
+{
+	// Initialize the pointers to nullptr
+	// This is important because the ComPtr class will call Release() on the pointer when it goes out of scope
+}
+
+// Destructor
+GraphicsEngine::~GraphicsEngine()
+{
+	// ComPtr will automatically release the resources when it goes out of scope
+}
+
+// Initialize the Directx for our window
+bool GraphicsEngine::Initialize(HWND hwnd, int windowWidth, int windowHeight)
+{
+	// First, we will set up the swap chain
+	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
+	swapChainDesc.BufferDesc.Width = windowWidth;
+	swapChainDesc.BufferDesc.Height = windowHeight;
+	swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // 32-bit RGBA color
+	swapChainDesc.BufferDesc.RefreshRate.Numerator = 60; // 60 Hz refresh rate
+	swapChainDesc.BufferDesc.RefreshRate.Denominator = 1; // 60 Hz refresh rate
+	swapChainDesc.SampleDesc.Count = 1; // No anti-aliasing
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapChainDesc.BufferCount = 2; // Double buffering
+	swapChainDesc.OutputWindow = hwnd;
+	swapChainDesc.Windowed = TRUE;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+
+	// Create the device, device context and swap chain
+	UINT createDeviceFlags = D3D11_CREATE_DEVICE_DEBUG; // enable debugging
+	
+	// Try to create the device and swap chain
+	HRESULT result = D3D11CreateDeviceAndSwapChain(
+		nullptr, // Use the default adapter
+		D3D_DRIVER_TYPE_HARDWARE, // Use the GPU
+		nullptr, // No software device
+		createDeviceFlags, // enable debugging 
+		nullptr, // use default feature level 
+		0, // no feature levels
+		D3D11_SDK_VERSION, // SDK version
+		&swapChainDesc, // swap chain description
+		m_swapChain.GetAddressOf(), // swap chain output
+		m_device.GetAddressOf(), // device output
+		nullptr, // don't care about feature level
+		m_context.GetAddressOf() // device context output
+	);
+	// Check if the creation was successful
+	if (FAILED(result))
+	{
+		// If the creation failed, we need to display an error message
+		MessageBox(hwnd, L"Failed to create device and swap chain!", L"Error", MB_OK);
+		return false;
+	}
+	// Create the render target
+	if (!CreateRenderTarget())
+	{
+		return false;
+	}
+
+	// set up the viewport
+	D3D11_VIEWPORT viewport = {}; // create a viewport
+	viewport.Width = static_cast<float>(windowWidth); // width of the viewport
+	viewport.Height = static_cast<float>(windowHeight);	// height of the viewport
+	viewport.MinDepth = 0.0f; // the closest an object can be on the screen
+	viewport.MaxDepth = 1.0f; // the farthest an object can be on the screen
+	m_context->RSSetViewports(1, &viewport); // set the viewport
+
+	return true;
+}
+
+bool GraphicsEngine::CreateRenderTarget()
+{
+	// Get the back buffer from the swap chain
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
+	HRESULT result = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backBuffer.GetAddressOf())); // get the back buffer
+	// Check if we got the back buffer
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	// set the render target
+	m_context->OMSetRenderTargets(1, m_renderTarget.GetAddressOf(), nullptr);
+
+	return true;
+}
+
+void GraphicsEngine::BeginFrame()
+{
+	// Clear the screen to a dark blue color
+	float clearColor[] = { 0.0f, 0.1f, 0.2f, 1.0f }; // dark blue
+	m_context->ClearRenderTargetView(m_renderTarget.Get(), clearColor); // clear the render target
+}
+
+void GraphicsEngine::EndFrame()
+{
+	// Present the frame to the screen
+	m_swapChain->Present(1, 0);
+}
