@@ -1,5 +1,4 @@
 #include "GraphicsEngine.h"
-#include <sstream> // for error messages
 
 // Constructor
 GraphicsEngine::GraphicsEngine()
@@ -144,4 +143,89 @@ void GraphicsEngine::EndFrame()
 {
 	// Present the frame to the screen
 	m_swapChain->Present(1, 0);
+}
+
+bool GraphicsEngine::CreateShaders() {
+	// load and compile the vertex shader
+	Microsoft::WRL::ComPtr<ID3DBlob> vertexShaderBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+
+	HRESULT hr = D3DCompileFromFile(L"VertexShader.hlsl",
+		nullptr, //optional defines
+		nullptr, //optonal include 
+		"main", // entry point function name
+		"vs_5_0", // shader model
+		D3DCOMPILE_DEBUG, // shader compile options
+		0, // effect compile options
+		vertexShaderBlob.GetAddressOf(), // compiled shader
+		errorBlob.GetAddressOf() // error messages
+	);
+
+	if (FAILED(hr)) {
+		// if the shader failed to compile, display an error message
+		if (errorBlob) {
+			OutputDebugStringA(reinterpret_cast<const char*>(
+				errorBlob->GetBufferPointer()));
+		}
+		return false;
+	}
+
+	// create the shader object
+	hr = m_device->CreateVertexShader(
+		vertexShaderBlob->GetBufferPointer(),
+		vertexShaderBlob->GetBufferSize(),
+		nullptr,
+		m_vertexShader.GetAddressOf()
+	);
+
+	// check if the shader was created successfully
+	if (FAILED(hr)) {
+		return false;
+	}
+
+	// load and compile the pixel shader
+	Microsoft::WRL::ComPtr<ID3DBlob> pixelShaderBlob;
+	hr = D3DCompileFromFile(L"PixelShader.hlsl",
+		nullptr, //optional defines
+		nullptr, //optonal include 
+		"main", // entry point function name
+		"ps_5_0", // shader model
+		D3DCOMPILE_DEBUG, // shader compile options
+		0, // effect compile options
+		pixelShaderBlob.GetAddressOf(), // compiled shader
+		errorBlob.GetAddressOf() // error messages
+	);
+
+	if (FAILED(hr)) {
+		// if the shader failed to compile, display an error message
+		if (errorBlob) {
+			OutputDebugStringA(reinterpret_cast<const char*>(
+				errorBlob->GetBufferPointer()));
+		}
+		return false;
+	}	
+
+	// Define input layout (map to our vertex structure)
+	D3D11_INPUT_ELEMENT_DESC layout[] = {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
+		  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12,
+		  D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	};
+
+	// Create the input layout
+	hr = m_device->CreateInputLayout(
+		layout, // input layout description
+		ARRAYSIZE(layout), // number of elements in the layout
+		vertexShaderBlob->GetBufferPointer(), // compiled vertex shader
+		vertexShaderBlob->GetBufferSize(), // size of the compiled shader
+		m_inputLayout.GetAddressOf() // input layout output
+	);
+
+	// check if the shader was created successfully
+	if (FAILED(hr)) {
+		return false;
+	}
+
+	return SUCCEEDED(hr);
 }
