@@ -4,6 +4,7 @@
 #include <wrl.h> // ComPtr smart pointers
 #include <d3dcompiler.h> // for shader compilation
 #include <sstream> // for error messages
+#include <DirectXMath.h>
 
 // We need to link with the DirectX libraries
 #pragma comment(lib, "d3d11.lib")
@@ -26,6 +27,18 @@ public:
 	void EndFrame();
 
 private:
+	// Add vertex buffer members
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;
+
+	// Define our vertex structure
+	struct Vertex {
+		DirectX::XMFLOAT3 position;
+		DirectX::XMFLOAT4 color;
+	};
+
+	// Add a helper function to create our triangle
+	bool CreateTriangle();
+
 	// Smart pointers for DirectX resources
 	// These will automatically release the resources when they go out of scope
 	Microsoft::WRL::ComPtr<ID3D11Device> m_device; // Creates ressources (textures, buffers, shaders)
@@ -37,6 +50,20 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_vertexShader; // Vertex shader
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_pixelShader; // Pixel shader
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout; // Input layout
+	
+	// constant buffer for the vertex shader
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_constantBuffer;
+
+	//structure for the constant buffer
+	struct ConstantBufferData
+	{
+		DirectX::XMMATRIX world;
+		DirectX::XMMATRIX view;
+		DirectX::XMMATRIX projection;
+	};
+
+	// add a helper function to create our constant buffer
+	bool CreateConstantBuffer();
 
 	bool CreateShaders(); // Helper function to create the shaders
 

@@ -92,6 +92,27 @@ bool GraphicsEngine::Initialize(HWND hwnd, int windowWidth, int windowHeight)
 		return false;
 	}
 
+	// Create the shaders
+	if (!CreateShaders())
+	{
+		OutputDebugString(L"Failed to create shaders\n");
+		return false;
+	}
+
+	// Create the triangle
+	if (!CreateTriangle())
+	{
+		OutputDebugString(L"Failed to create triangle\n");
+		return false;
+	}
+
+	// Create the constant buffer
+	if (!CreateConstantBuffer())
+	{
+		OutputDebugString(L"Failed to create constant buffer\n");
+		return false;
+	}
+
 	return true;
 }
 
@@ -137,10 +158,68 @@ void GraphicsEngine::BeginFrame()
 	// Clear the screen to a dark blue color
 	float clearColor[4] = { 0.0f, 0.1f, 0.2f, 1.0f }; // dark blue
 	m_context->ClearRenderTargetView(m_renderTarget.Get(), clearColor); // clear the render target
+
+	// Update the constant buffer
+	ConstantBufferData cbData;
+
+	// create a simple rotation for the triangle
+	static float rotationAngle = 0.0f;
+	rotationAngle += 0.01f; // increment the rotation angle
+
+	// set up the transformation matrices
+	cbData.world = DirectX::XMMatrixRotationY(rotationAngle); // rotation matrix
+	cbData.view = DirectX::XMMatrixLookAtLH(
+		DirectX::XMVectorSet(0.0f, 0.0f, -5.0f, 1.0f), // camera position
+		DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), // look at point
+		DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f) // up vector
+	);
+
+	cbData.projection = DirectX::XMMatrixPerspectiveFovLH(
+		DirectX::XM_PIDIV4, // 45 degree field of view
+		static_cast<float>(800) / static_cast<float>(600), // aspect ratio
+		0.1f, // near plane
+		100.0f // far plane
+	);
+
+	// transpose the matrices for the shader
+	cbData.world = DirectX::XMMatrixTranspose(cbData.world);
+	cbData.view = DirectX::XMMatrixTranspose(cbData.view);
+	cbData.projection = DirectX::XMMatrixTranspose(cbData.projection);
+
+	// Update the constant buffer
+	m_context->UpdateSubresource(
+		m_constantBuffer.Get(), // the constant buffer
+		0, // subresource index
+		nullptr, // no box
+		&cbData, // pointer to the data
+		0, // no row pitch
+		0 // no depth pitch
+	);
+
+	// Set the constant buffer to the vertex shader
+	m_context->VSSetConstantBuffers(0, 1, m_constantBuffer.GetAddressOf()); // set the constant buffer
+
+	// set the vertex buffer
+	UINT stride = sizeof(Vertex); // size of each vertex
+	UINT offset = 0; // no offset
+	m_context->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset); // set the vertex buffer
+
+	// set the input layout
+	m_context->IASetInputLayout(m_inputLayout.Get()); // set the input layout
+
+	// set the primitive topology
+	m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // set the primitive topology
+
+	// set the shaders
+	m_context->VSSetShader(m_vertexShader.Get(), nullptr, 0); // set the vertex shader
+	m_context->PSSetShader(m_pixelShader.Get(), nullptr, 0); // set the pixel shader
 }
 
 void GraphicsEngine::EndFrame()
 {
+	//draw the triangle
+	m_context->Draw(3, 0); // draw the triangle (3 vertices, starting at index 0)
+
 	// Present the frame to the screen
 	m_swapChain->Present(1, 0);
 }
@@ -226,6 +305,57 @@ bool GraphicsEngine::CreateShaders() {
 	if (FAILED(hr)) {
 		return false;
 	}
+
+	return SUCCEEDED(hr);
+}
+
+bool GraphicsEngine::CreateTriangle() {
+	//define the vertices of our triangle
+	Vertex triangleVertices[] = {
+		{ DirectX::XMFLOAT3(0.0f, 0.5f, 0.0f), DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) }, // top vertex (red)
+		{ DirectX::XMFLOAT3(-0.5f, -0.5f, 0.0f), DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) }, // bottom left vertex (green)
+		{ DirectX::XMFLOAT3(0.5f, -0.5f, 0.0f), DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) } // bottom right vertex (blue)
+	};
+
+	// create the vertex buffer description
+	D3D11_BUFFER_DESC vertexBufferDesc = {};
+	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT; // default usage
+	vertexBufferDesc.ByteWidth = sizeof(triangleVertices); // size of the buffer
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER; // bind as a vertex buffer
+	vertexBufferDesc.CPUAccessFlags = 0; // no CPU access
+
+	//Create the initial data
+	D3D11_SUBRESOURCE_DATA vertexData = {};
+	vertexData.pSysMem = triangleVertices; // pointer to the vertex data
+
+	//Actually create the vertex buffer
+	HRESULT hr = m_device->CreateBuffer(
+		&vertexBufferDesc, // buffer description
+		&vertexData, // initial data
+		m_vertexBuffer.GetAddressOf() // vertex buffer output
+	);
+
+
+
+	// Check if the vertex buffer was created successfully
+	return SUCCEEDED(hr);
+}
+
+bool GraphicsEngine::CreateConstantBuffer()
+{
+	// Create the constant buffer description
+	D3D11_BUFFER_DESC constantBufferDesc = {};
+	constantBufferDesc.Usage = D3D11_USAGE_DEFAULT; // default usage
+	constantBufferDesc.ByteWidth = sizeof(ConstantBufferData); // size of the buffer
+	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER; // bind as a constant buffer
+	constantBufferDesc.CPUAccessFlags = 0; // no CPU access
+
+	// Create the constant buffer
+	HRESULT hr = m_device->CreateBuffer(
+		&constantBufferDesc, // buffer description
+		nullptr, // no initial data
+		m_constantBuffer.GetAddressOf() // constant buffer output
+	);
 
 	return SUCCEEDED(hr);
 }

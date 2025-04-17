@@ -1,3 +1,11 @@
+//define our constant buffer
+cbuffer ConstantBuffer : register(b0)
+{
+    matrix World;
+    matrix View;
+    matrix Projection;
+};
+
 //vertex shader
 struct VertexInput
 {
@@ -14,10 +22,19 @@ struct VertexOutput
 VertexOutput main(VertexInput input)
 {
     VertexOutput output;
+    
     // transform position from 3D to screen coordinates
-    output.position = float4(input.position, 1.0f);
+    float4 pos = float4(input.position, 1.0f);
+    
+    // apply the world, view, and projection matrices
+    pos = mul(pos, World);
+    pos = mul(pos, View);
+    pos = mul(pos, Projection);
+    
     // pass the color through
+    output.position = pos;
     output.color = input.color;
+    
     return output;
 }
 
