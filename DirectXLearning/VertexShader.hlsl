@@ -30,15 +30,8 @@ VertexOutput main(VertexInput input)
     pos = mul(pos, World);
     pos = mul(pos, View);
     pos = mul(pos, Projection);
-    
     // pass the color through
     output.position = pos;
     output.color = input.color;
-    
     return output;
 }
-
-/*float4 main( float4 pos : POSITION ) : SV_POSITION
-{
-	return pos;
-}*/

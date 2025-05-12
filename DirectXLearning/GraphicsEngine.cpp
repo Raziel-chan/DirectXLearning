@@ -5,6 +5,15 @@ GraphicsEngine::GraphicsEngine()
 {
 	// Initialize the pointers to nullptr
 	// This is important because the ComPtr class will call Release() on the pointer when it goes out of scope
+	m_device = nullptr;
+	m_context = nullptr;
+	m_swapChain = nullptr;
+	m_renderTarget = nullptr;
+	m_vertexShader = nullptr;
+	m_pixelShader = nullptr;
+	m_inputLayout = nullptr;
+	m_vertexBuffer = nullptr;
+	m_constantBuffer = nullptr;
 }
 
 // Destructor
@@ -35,6 +44,7 @@ bool GraphicsEngine::Initialize(HWND hwnd, int windowWidth, int windowHeight)
 	swapChainDesc.OutputWindow = hwnd;
 	swapChainDesc.Windowed = TRUE;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	swapChainDesc.Flags = 0;  // Remove any extra flags that might cause issues
 
 	// Log that we're starting device creation
 	OutputDebugString(L"Creating Device and SwapChain...\n");
@@ -66,6 +76,32 @@ bool GraphicsEngine::Initialize(HWND hwnd, int windowWidth, int windowHeight)
 	}
 
 	OutputDebugString(L"Device and SwapChain created successfully\n");
+
+	// Create a simple blend state
+D3D11_BLEND_DESC blendDesc = {};
+blendDesc.RenderTarget[0].BlendEnable = FALSE;
+blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+Microsoft::WRL::ComPtr<ID3D11BlendState> blendState;
+m_device->CreateBlendState(&blendDesc, blendState.GetAddressOf());
+
+float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+m_context->OMSetBlendState(blendState.Get(), blendFactor, 0xFFFFFFFF);
+
+	// Add this to your Initialize function after creating device
+	D3D11_RASTERIZER_DESC rastDesc = {};
+	rastDesc.FillMode = D3D11_FILL_SOLID;
+	rastDesc.CullMode = D3D11_CULL_NONE;  // IMPORTANT: Don't cull any triangles
+	rastDesc.FrontCounterClockwise = FALSE;  // This is the default
+	rastDesc.DepthClipEnable = TRUE;
+
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rastState;
+	HRESULT hr = m_device->CreateRasterizerState(&rastDesc, rastState.GetAddressOf());
+	if (SUCCEEDED(hr)) {
+		m_context->RSSetState(rastState.Get());
+		OutputDebugString(L"Rasterizer state set\n");
+	}
+
 
 	// Create the render target
 	if (!CreateRenderTarget())
@@ -155,14 +191,26 @@ void GraphicsEngine::BeginFrame()
 		return;
 	}
 
-	// Clear the screen to a dark blue color
-	float clearColor[4] = { 0.0f, 0.1f, 0.2f, 1.0f }; // dark blue
+	// Clear with a VERY different color - bright purple for visibility 
+	float clearColor[4] = { 0.5f, 0.0f, 0.5f, 1.0f }; // Bright purple
 	m_context->ClearRenderTargetView(m_renderTarget.Get(), clearColor); // clear the render target
 
-	// Update the constant buffer
-	ConstantBufferData cbData;
+	// *** IMPORTANT: Re-bind render target every frame ***
+	m_context->OMSetRenderTargets(1, m_renderTarget.GetAddressOf(), nullptr);
 
+	// Set up pipeline
+	// Set up vertex buffer with proper stride
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	m_context->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
+	m_context->IASetInputLayout(m_inputLayout.Get());
+	m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_context->VSSetShader(m_vertexShader.Get(), nullptr, 0);
+	m_context->PSSetShader(m_pixelShader.Get(), nullptr, 0);
+	
+	// Update the constant buffer
 	// create a simple rotation for the triangle
+	ConstantBufferData cbData;
 	static float rotationAngle = 0.0f;
 	rotationAngle += 0.01f; // increment the rotation angle
 
@@ -186,33 +234,9 @@ void GraphicsEngine::BeginFrame()
 	cbData.view = DirectX::XMMatrixTranspose(cbData.view);
 	cbData.projection = DirectX::XMMatrixTranspose(cbData.projection);
 
+	m_context->VSSetConstantBuffers(0, 1, m_constantBuffer.GetAddressOf());
 	// Update the constant buffer
-	m_context->UpdateSubresource(
-		m_constantBuffer.Get(), // the constant buffer
-		0, // subresource index
-		nullptr, // no box
-		&cbData, // pointer to the data
-		0, // no row pitch
-		0 // no depth pitch
-	);
-
-	// Set the constant buffer to the vertex shader
-	m_context->VSSetConstantBuffers(0, 1, m_constantBuffer.GetAddressOf()); // set the constant buffer
-
-	// set the vertex buffer
-	UINT stride = sizeof(Vertex); // size of each vertex
-	UINT offset = 0; // no offset
-	m_context->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset); // set the vertex buffer
-
-	// set the input layout
-	m_context->IASetInputLayout(m_inputLayout.Get()); // set the input layout
-
-	// set the primitive topology
-	m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // set the primitive topology
-
-	// set the shaders
-	m_context->VSSetShader(m_vertexShader.Get(), nullptr, 0); // set the vertex shader
-	m_context->PSSetShader(m_pixelShader.Get(), nullptr, 0); // set the pixel shader
+	m_context->UpdateSubresource(m_constantBuffer.Get(), 0, nullptr, &cbData, 0, 0);
 }
 
 void GraphicsEngine::EndFrame()
@@ -282,14 +306,24 @@ bool GraphicsEngine::CreateShaders() {
 				errorBlob->GetBufferPointer()));
 		}
 		return false;
-	}	
+	}
+
+	// Create the pixel shader object
+	hr = m_device->CreatePixelShader(
+		pixelShaderBlob->GetBufferPointer(),
+		pixelShaderBlob->GetBufferSize(),
+		nullptr,
+		m_pixelShader.GetAddressOf()
+	);
+
+	if (FAILED(hr)) {
+		return false;
+	}
 
 	// Define input layout (map to our vertex structure)
 	D3D11_INPUT_ELEMENT_DESC layout[] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
-		  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12,
-		  D3D11_INPUT_PER_VERTEX_DATA, 0 }
+	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	// Create the input layout
@@ -312,9 +346,9 @@ bool GraphicsEngine::CreateShaders() {
 bool GraphicsEngine::CreateTriangle() {
 	//define the vertices of our triangle
 	Vertex triangleVertices[] = {
-		{ DirectX::XMFLOAT3(0.0f, 0.5f, 0.0f), DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) }, // top vertex (red)
-		{ DirectX::XMFLOAT3(-0.5f, -0.5f, 0.0f), DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) }, // bottom left vertex (green)
-		{ DirectX::XMFLOAT3(0.5f, -0.5f, 0.0f), DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) } // bottom right vertex (blue)
+		{ DirectX::XMFLOAT3(0.0f, 0.9f, 0.5f), DirectX::XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f) },  // Top (YELLOW)
+		{ DirectX::XMFLOAT3(-0.9f, -0.9f, 0.5f), DirectX::XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f) }, // Bottom left (CYAN)
+		{ DirectX::XMFLOAT3(0.9f, -0.9f, 0.5f), DirectX::XMFLOAT4(1.0f, 0.3f, 0.3f, 1.0f) }   // Bottom right (LIGHT RED)
 	};
 
 	// create the vertex buffer description
@@ -334,6 +368,26 @@ bool GraphicsEngine::CreateTriangle() {
 		&vertexData, // initial data
 		m_vertexBuffer.GetAddressOf() // vertex buffer output
 	);
+
+	for (int i = 0; i < 3; i++) {
+		std::ostringstream oss;
+		oss << "Vertex " << i << " Position: ("
+			<< triangleVertices[i].position.x << ", "
+			<< triangleVertices[i].position.y << ", "
+			<< triangleVertices[i].position.z << ") Color: ("
+			<< triangleVertices[i].color.x << ", "
+			<< triangleVertices[i].color.y << ", "
+			<< triangleVertices[i].color.z << ", "
+			<< triangleVertices[i].color.w << ")" << std::endl;
+		OutputDebugStringA(oss.str().c_str());
+	}
+
+	D3D11_BUFFER_DESC desc;
+	m_vertexBuffer->GetDesc(&desc);
+	std::ostringstream oss;
+	oss << "Vertex buffer size: " << desc.ByteWidth << " bytes, for "
+		<< (desc.ByteWidth / sizeof(Vertex)) << " vertices" << std::endl;
+	OutputDebugStringA(oss.str().c_str());
 
 
 

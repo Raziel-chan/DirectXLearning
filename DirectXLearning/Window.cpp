@@ -3,7 +3,6 @@
 #include "Window.h"
 #include "GraphicsEngine.h"
 
-
 Window::Window(const std::wstring& title, int width,int height)
 	: m_title(title)
 	, m_width(width)

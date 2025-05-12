@@ -27,18 +27,7 @@ public:
 	void EndFrame();
 
 private:
-	// Add vertex buffer members
-	Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;
-
-	// Define our vertex structure
-	struct Vertex {
-		DirectX::XMFLOAT3 position;
-		DirectX::XMFLOAT4 color;
-	};
-
-	// Add a helper function to create our triangle
-	bool CreateTriangle();
-
+	
 	// Smart pointers for DirectX resources
 	// These will automatically release the resources when they go out of scope
 	Microsoft::WRL::ComPtr<ID3D11Device> m_device; // Creates ressources (textures, buffers, shaders)
@@ -52,6 +41,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout; // Input layout
 	
 	// constant buffer for the vertex shader
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_constantBuffer;
 
 	//structure for the constant buffer
@@ -62,6 +52,12 @@ private:
 		DirectX::XMMATRIX projection;
 	};
 
+	// Define our vertex structure
+	struct Vertex {
+		DirectX::XMFLOAT3 position;
+		DirectX::XMFLOAT4 color;
+	};
+
 	// add a helper function to create our constant buffer
 	bool CreateConstantBuffer();
 
@@ -69,4 +65,7 @@ private:
 
 	// Helper function to create the render target 
 	bool CreateRenderTarget();
+
+	// Add a helper function to create our triangle
+	bool CreateTriangle();
 };

@@ -6,7 +6,7 @@ struct PixelInput
 };
 
 float4 main(PixelInput input) : SV_TARGET
-{
+{    
     // return the color of the pixel
 	return input.color;
 }
