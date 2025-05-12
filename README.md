@@ -1,6 +1,6 @@
 # DirectX Learning Project Documentation
 
-## Project Overview ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/Raziel-chan/DirectXLearning?utm_source=oss&utm_medium=github&utm_campaign=Raziel-chan%2FDirectXLearning&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+## Project Overview   ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/Raziel-chan/DirectXLearning?utm_source=oss&utm_medium=github&utm_campaign=Raziel-chan%2FDirectXLearning&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 A learning project for understanding DirectX 11 graphics programming, starting from basic Windows application development to advanced graphics techniques.
 
 ## Project Setup
