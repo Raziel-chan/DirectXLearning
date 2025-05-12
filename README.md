@@ -51,11 +51,11 @@ DirectXLearning/
 - [x] Implemented proper graphics resource management using ComPtr
 
 ### Phase 5: Next Steps
-- [ ] Create and manage vertex buffers
-- [ ] Implement basic shader system
-- [ ] Set up vertex and pixel shaders
-- [ ] Implement basic shape rendering
-- [ ] Add transformation systems
+- [x] Create and manage vertex buffers
+- [x] Implement basic shader system
+- [x] Set up vertex and pixel shaders
+- [x] Implement basic shape rendering
+- [x] Add transformation systems (rotation)
 
 ## Learning Goals
 1. Graphics Programming Fundamentals
