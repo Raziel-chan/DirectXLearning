@@ -25,6 +25,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // Main loop
     bool running = true;
     while (running) {
+        // Update input state
+        window.UpdateInput();
+
         // Use our Window class's ProcessMessages method
         running = window.ProcessMessages();
 

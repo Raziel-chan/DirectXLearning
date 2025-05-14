@@ -1,4 +1,5 @@
 #include "GraphicsEngine.h"
+#include "Window.h"
 
 // Constructor
 GraphicsEngine::GraphicsEngine()
@@ -183,7 +184,7 @@ bool GraphicsEngine::CreateRenderTarget()
 	return true;
 }
 
-void GraphicsEngine::BeginFrame()
+void GraphicsEngine::BeginFrame(const Window& window)
 {
 	if (!m_renderTarget)
 	{
@@ -214,19 +215,22 @@ void GraphicsEngine::BeginFrame()
 	static float rotationAngle = 0.0f;
 	rotationAngle += 0.01f; // increment the rotation angle
 
-	// set up the transformation matrices
-	cbData.world = DirectX::XMMatrixRotationY(rotationAngle); // rotation matrix
+	// Create world matrix with rotation
+	cbData.world = DirectX::XMMatrixRotationRollPitchYaw(m_rotationX, m_rotationY, 0.0f);
+
+	// Create view matrix from camera position
 	cbData.view = DirectX::XMMatrixLookAtLH(
-		DirectX::XMVectorSet(0.0f, 0.0f, -5.0f, 1.0f), // camera position
-		DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), // look at point
-		DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f) // up vector
+		m_cameraPosition,
+		m_cameraTarget,
+		m_upVector
 	);
 
+	// Create projection matrix
 	cbData.projection = DirectX::XMMatrixPerspectiveFovLH(
-		DirectX::XM_PIDIV4, // 45 degree field of view
-		static_cast<float>(800) / static_cast<float>(600), // aspect ratio
-		0.1f, // near plane
-		100.0f // far plane
+		DirectX::XM_PIDIV4, // 45 degrees
+		static_cast<float>(window.GetWidth()) / static_cast<float>(window.GetHeight()),
+		0.1f, // Near plane
+		100.0f // Far plane
 	);
 
 	// transpose the matrices for the shader
@@ -412,4 +416,90 @@ bool GraphicsEngine::CreateConstantBuffer()
 	);
 
 	return SUCCEEDED(hr);
+}
+
+void GraphicsEngine::ProcessKeyboardInput(const Window& window, float deltaTime) {
+	// Rotate triangle with arrow keys
+	if (window.IsKeyPressed(VK_UP)) {
+		m_rotationX += m_rotationSpeed * deltaTime;
+	}
+	if (window.IsKeyPressed(VK_DOWN)) {
+		m_rotationX -= m_rotationSpeed * deltaTime;
+	}
+	if (window.IsKeyPressed(VK_LEFT)) {
+		m_rotationY -= m_rotationSpeed * deltaTime;
+	}
+	if (window.IsKeyPressed(VK_RIGHT)) {
+		m_rotationY += m_rotationSpeed * deltaTime;
+	}
+	// Camera movement with WASD
+	DirectX::XMVECTOR forward = DirectX::XMVector3Normalize(
+		DirectX::XMVectorSubtract(m_cameraTarget, m_cameraPosition)
+	);
+
+	DirectX::XMVECTOR right = DirectX::XMVector3Normalize(
+		DirectX::XMVector3Cross(forward, m_upVector)
+	);
+
+	if (window.IsKeyPressed('W')) {
+		m_cameraPosition = DirectX::XMVectorAdd(
+			m_cameraPosition,
+			DirectX::XMVectorScale(forward, m_moveSpeed * deltaTime)
+		);
+		m_cameraTarget = DirectX::XMVectorAdd(
+			m_cameraTarget,
+			DirectX::XMVectorScale(forward, m_moveSpeed * deltaTime)
+		);
+	}
+	if (window.IsKeyPressed('S')) {
+		m_cameraPosition = DirectX::XMVectorSubtract(
+			m_cameraPosition,
+			DirectX::XMVectorScale(forward, m_moveSpeed * deltaTime)
+		);
+		m_cameraTarget = DirectX::XMVectorSubtract(
+			m_cameraTarget,
+			DirectX::XMVectorScale(forward, m_moveSpeed * deltaTime)
+		);
+	}
+	if (window.IsKeyPressed('A')) {
+		m_cameraPosition = DirectX::XMVectorSubtract(
+			m_cameraPosition,
+			DirectX::XMVectorScale(right, m_moveSpeed * deltaTime)
+		);
+		m_cameraTarget = DirectX::XMVectorSubtract(
+			m_cameraTarget,
+			DirectX::XMVectorScale(right, m_moveSpeed * deltaTime)
+		);
+	}
+	if (window.IsKeyPressed('D')) {
+		m_cameraPosition = DirectX::XMVectorAdd(
+			m_cameraPosition,
+			DirectX::XMVectorScale(right, m_moveSpeed * deltaTime)
+		);
+		m_cameraTarget = DirectX::XMVectorAdd(
+			m_cameraTarget,
+			DirectX::XMVectorScale(right, m_moveSpeed * deltaTime)
+		);
+	}
+}
+
+void GraphicsEngine::ProcessMouseInput(const Window& window, float deltaTime) {
+	// Use right mouse button to rotate the view
+	if (window.IsMouseButtonPressed(1)) { // 1 = right button
+		float mouseSensitivity = 0.005f;
+		float yawChange = window.GetMouseDeltaX() * mouseSensitivity;
+		float pitchChange = window.GetMouseDeltaY() * mouseSensitivity;
+
+		// Create rotation matrices
+		DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw(pitchChange, yawChange, 0);
+
+		// Get the vector from camera to target
+		DirectX::XMVECTOR directionVector = DirectX::XMVectorSubtract(m_cameraTarget, m_cameraPosition);
+
+		// Apply rotation to this vector
+		directionVector = DirectX::XMVector3Transform(directionVector, rotationMatrix);
+
+		// Set new target position based on rotated vector
+		m_cameraTarget = DirectX::XMVectorAdd(m_cameraPosition, directionVector);
+	}
 }

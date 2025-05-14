@@ -11,6 +11,9 @@
 // We also need to link with the DirectX shader compiler
 #pragma comment(lib, "d3dcompiler.lib")
 
+// Forward declaration of the Window class
+class Window;
+
 // Class to handle the DirectX rendering
 class GraphicsEngine
 {
@@ -22,9 +25,13 @@ public:
 	bool Initialize(HWND hwnd, int windowWidth, int windowHeight);
 
 	// Clear the screen and prepare for drawing
-	void BeginFrame();
+	void BeginFrame(const Window& window);
 	// Present the finished frame to the screen
 	void EndFrame();
+
+	// Input response methods
+	void ProcessKeyboardInput(const Window& window, float deltaTime);
+	void ProcessMouseInput(const Window& window, float deltaTime);
 
 private:
 	
@@ -57,6 +64,17 @@ private:
 		DirectX::XMFLOAT3 position;
 		DirectX::XMFLOAT4 color;
 	};
+
+	// Camera/view control
+	DirectX::XMVECTOR m_cameraPosition = DirectX::XMVectorSet(0.0f, 0.0f, -5.0f, 1.0f);
+	DirectX::XMVECTOR m_cameraTarget = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	DirectX::XMVECTOR m_upVector = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+
+	// Object control
+	float m_rotationX = 0.0f;
+	float m_rotationY = 0.0f;
+	float m_rotationSpeed = 2.0f;
+	float m_moveSpeed = 3.0f;
 
 	// add a helper function to create our constant buffer
 	bool CreateConstantBuffer();
