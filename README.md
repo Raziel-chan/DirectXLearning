@@ -13,49 +13,73 @@ A learning project for understanding DirectX 11 graphics programming, starting f
 ### Project Structure
 ```
 DirectXLearning/
-├── src/               
+├── src/
 │   ├── main.cpp                 # Application entry point
-│   ├── Graphics/               
+│   ├── Graphics/
 │   │   ├── GraphicsEngine.h     # DirectX core functionality
 │   │   └── GraphicsEngine.cpp   # Graphics implementation
-│   └── Window/                  
+│   └── Window/
 │       ├── Window.h             # Window management
 │       └── Window.cpp           # Window implementation
-└── README.md                    # Project documentation
+├── shaders/
+│   ├── VertexShader.hlsl       # Vertex shader
+│   └── PixelShader.hlsl        # Pixel shader
+└── README.md                    # Project documentation                
 ```
 
 ## Learning Progress
-### Phase 1: Project Setup and Planning
+### Phase 1: Project Setup and Planning ✓
 - [x] Created Visual Studio 2022 project
 - [x] Set up project structure
 - [x] Initialized Git repository
 - [x] Created documentation structure
 
-### Phase 2: Windows Programming Fundamentals
+### Phase 2: Windows Programming Fundamentals ✓
 - [x] Created Window class with RAII principles
 - [x] Implemented window message handling system
 - [x] Set up main application loop with proper resource management
 - [x] Added debug output system for development
 
-### Phase 3: DirectX Initialization
+### Phase 3: DirectX Initialization ✓
 - [x] DirectX device setup with error handling
 - [x] Swap chain creation and configuration
 - [x] Render target view implementation
 - [x] Basic frame clearing and presentation
 - [x] Integration with window system
 
-### Phase 4: Graphics Pipeline Understanding
+### Phase 4: Graphics Pipeline Understanding ✓
 - [x] Implemented VSync control
 - [x] Understood buffering systems (double/triple buffering)
 - [x] Learned about monitor refresh rate synchronization
 - [x] Implemented proper graphics resource management using ComPtr
 
-### Phase 5: Next Steps
-- [x] Create and manage vertex buffers
-- [x] Implement basic shader system
+### Phase 5: Basic Rendering ✓
+- [x] Created and managed vertex buffers
+- [x] Implemented basic shader system
 - [x] Set up vertex and pixel shaders
-- [x] Implement basic shape rendering
-- [x] Add transformation systems (rotation)
+- [x] Implemented basic shape rendering (colored triangle)
+- [x] Added transformation systems (rotation)
+
+### Phase 6: User Interaction ✓
+- [x] Implemented keyboard input handling
+- [x] Added mouse movement tracking
+- [x] Created camera controls (WASD movement)
+- [x] Added object manipulation (rotation with arrow keys)
+- [x] Implemented view rotation with mouse
+
+### Phase 7: Texturing (Current)
+- [ ] Update vertex format to include texture coordinates
+- [ ] Create texture loading system
+- [ ] Implement texture sampling in shaders
+- [ ] Apply textures to geometry
+- [ ] Add texture filtering and addressing modes
+
+### Future Phases
+- [ ] Lighting Systems
+- [ ] 3D Model Loading
+- [ ] Advanced Rendering Techniques
+- [ ] Performance Optimization
+
 
 ## Learning Goals
 1. Graphics Programming Fundamentals
@@ -83,15 +107,10 @@ DirectXLearning/
 - Proper resource management using ComPtr
 - Frame presentation with VSync support
 - Comprehensive error handling system
+- Interactive 3D scene with user controls
 
 ## Resources and References
 - Microsoft DirectX Documentation
 - Windows Graphics Programming Guide
 - Microsoft DirectX Graphics Samples
-
-## Future Goals
-- Implement basic 3D rendering
-- Add camera system
-- Implement lighting systems
-- Add texture loading and mapping
-- Implement basic shader effects
+- Claude AI
