@@ -45,7 +45,7 @@ bool GraphicsEngine::Initialize(HWND hwnd, int windowWidth, int windowHeight)
 	swapChainDesc.OutputWindow = hwnd;
 	swapChainDesc.Windowed = TRUE;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	swapChainDesc.Flags = 0;  // Remove any extra flags that might cause issues
+	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;  // Remove any extra flags that might cause issues
 
 	// Log that we're starting device creation
 	OutputDebugString(L"Creating Device and SwapChain...\n");
