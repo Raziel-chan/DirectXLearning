@@ -88,6 +88,7 @@ bool Window::Initialize() {
 	OutputDebugString(L"Starting window initialization...\n");
 
 	WNDCLASSEX windowClass = {};
+	ZeroMemory(&windowClass, sizeof(WNDCLASSEX)); // Clear the structure
 	windowClass.cbSize = sizeof(WNDCLASSEX);
 	windowClass.style = CS_HREDRAW | CS_VREDRAW;
 	windowClass.lpfnWndProc = WindowProc;
@@ -199,7 +200,7 @@ bool Window::Initialize() {
 				}
 			}
 
-			window->m_handle = hwnd;  // Add this line
+			window->m_handle = hwnd;  
 			return window->HandleMessage(message, wParam, lParam);
 		}
 
@@ -302,8 +303,8 @@ bool Window::Initialize() {
 			return 0;
 
 		case WM_SIZE:
-			m_width = LOWORD(lParam);   // Now this is valid
-			m_height = HIWORD(lParam);  // Now this is valid
+			m_width = LOWORD(lParam);   
+			m_height = HIWORD(lParam); 
 			return 0;
 		case WM_PAINT:
 			PAINTSTRUCT ps;
@@ -311,5 +312,6 @@ bool Window::Initialize() {
 			EndPaint(m_handle, &ps);
 			return 0;
 		}
+		// Default message handling
 		return DefWindowProc(m_handle, message, wParam, lParam);
 	}
