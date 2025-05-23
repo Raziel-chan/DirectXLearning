@@ -61,8 +61,9 @@ private:
 
 	// Define our vertex structure
 	struct Vertex {
-		DirectX::XMFLOAT3 position;
-		DirectX::XMFLOAT4 color;
+		DirectX::XMFLOAT3 position; // Position in 3D space
+		DirectX::XMFLOAT4 color; 
+		DirectX::XMFLOAT2 texCoord; // Texture coordinates
 	};
 
 	// Camera/view control

@@ -28,6 +28,12 @@
     <Filter Include="docs">
       <UniqueIdentifier>{3fc1a1fc-468f-450e-98e9-6ccdc7f48d1e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Textures">
+      <UniqueIdentifier>{375e6655-fcc3-4853-b854-21fb10a69de0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Sprites">
+      <UniqueIdentifier>{62c7abd9-ea9d-4f6b-a030-ecdfac7fc9f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -72,11 +78,15 @@
     <Image Include="DirectXLearning.ico">
       <Filter>Fichiers de ressources</Filter>
     </Image>
+    <Image Include="..\..\..\..\Downloads\cat.png">
+      <Filter>src\Sprites</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="progress.md">
       <Filter>docs</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="VertexShader.hlsl">

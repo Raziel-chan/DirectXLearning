@@ -94,7 +94,7 @@ bool Window::Initialize() {
 	windowClass.hInstance = GetModuleHandle(nullptr);
 	windowClass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
 	windowClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	windowClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	//windowClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 	windowClass.lpszClassName = WINDOW_CLASS_NAME;
 	windowClass.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 
